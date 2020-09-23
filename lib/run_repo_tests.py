@@ -271,7 +271,7 @@ def github_api_request(settings, token, url, data=None):
     }
     method = 'GET'
     if data is not None:
-        headers['Content-Type'] = 'application/json'
+        headers['Content-Type'] = 'application/vnd.github.v3+json'
         data = json.dumps(data).encode('utf-8')
         print('POST', data)
         method = 'POST'
