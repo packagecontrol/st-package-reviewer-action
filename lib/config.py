@@ -17,8 +17,8 @@ def read(name):
     with open('%s/%s.yml' % (os.path.dirname(os.path.abspath(__file__)), name), 'r') as f:
         try:
             # Try to use the libyaml loader
-            config = yaml.load(f, Loader=yaml.CLoader)
+            config = yaml.safe_load(f, Loader=yaml.CLoader)
         except (AttributeError):
-            config = yaml.load(f)
+            config = yaml.safe_load(f)
 
     return config
