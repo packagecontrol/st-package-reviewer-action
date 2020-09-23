@@ -1,0 +1,28 @@
+name: Sublime Text Package Reviewer
+description: GitHub Action for reviewing package control channel changes
+
+inputs:
+  pr-url:
+    description: The URL of the pull request
+    required: true
+  base-sha:
+    description: The SHA of the base commit to diff against
+    required: true
+  current-sha:
+    description: The SHA of the current commit to diff against
+    required: true
+  token:
+    description: The temporary GitHub token used to post review results as comments
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Review package
+      shell: bash
+      run: |
+        python3 ${{ github.action_path }}/run-review-bot.py \
+        --pr-url ${{ inputs.pr-url }} \
+        --base-sha ${{ inputs.base-sha }} \
+        --current-sha ${{ inputs.current-sha }} \
+        --token ${{ inputs.token }}
