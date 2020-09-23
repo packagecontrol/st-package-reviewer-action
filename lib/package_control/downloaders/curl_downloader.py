@@ -255,7 +255,7 @@ class CurlDownloader(CliDownloader, DecodingDownloader, LimitingDownloader, Cach
                         )
                     continue
 
-                error_string = u'%s %s downloading %s.' % (error_message, download_error, url)
+                error_string = u'%s %s downloading %s' % (error_message, download_error, url)
 
             break
 
