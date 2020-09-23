@@ -1,9 +1,10 @@
 # review-bot-action
 GitHub Action for reviewing package control channel changes
 
-## Example worflow
+## Example workflow
 
-Below is an example workflow for running this action:
+Below is an example workflow for running this action.
+It can be placed at `.github/workflows/on-pr.yaml` (file can have any name).
 
 ```yaml
 name: On PR
