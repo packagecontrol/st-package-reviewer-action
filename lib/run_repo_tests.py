@@ -273,7 +273,6 @@ def github_api_request(settings, token, url, data=None):
     if data is not None:
         headers['Content-Type'] = 'application/vnd.github.v3+json'
         data = json.dumps(data).encode('utf-8')
-        print('POST', data)
         method = 'POST'
     req = Request(
         url,
@@ -517,42 +516,31 @@ def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
         comment_url = '%s/reviews' % pr_url
 
         try:
-            res = github_api_request(settings, token, comment_url, {'body': '\n'.join(comment), 'event': event})
+            res = github_api_request(settings, token, comment_url, {'body': '\n'.join(comment), 'event': 'REQUEST_CHANGES'})
             if res.getcode() != 200:
-                print('Arguments', {
-                    'comment_url': comment_url,
-                    'comment': '\n'.join(comment),
-                    'event': event,
-                    'code': res.getcode(),
-                })
                 return {
                     '__status_code__': 500,
                     'result': 'error',
                     'message': 'Error posting review to PR - %d' % res.getcode()
                 }
         except URLError as e:
-            print('Arguments', {
-                'comment_url': comment_url,
-                'comment': '\n'.join(comment),
-                'event': event,
-            })
+            # readlines seems undocumented for URLError but appears to be the
+            # only way to get the response data
+            try:
+                error = '%s (response: %s)' % (e, e.readlines())
+            except Exception as e:
+                error = str(e)
             return {
                 '__status_code__': 500,
                 'result': 'error',
-                'message': 'Error posting review to PR - %s' % str(e)
+                'message': 'Error posting review to PR - %s' % error
             }
         except HTTPError as e:
-            print('Arguments', {
-                'comment_url': comment_url,
-                'comment': '\n'.join(comment),
-                'event': event,
-                'ex.reason': e.reason,
-                'ex.headers': e.headers,
-            })
+            error = '%s (response: %s)' % (e, e.readlines())
             return {
                 '__status_code__': 500,
                 'result': 'error',
-                'message': 'Error posting review to PR - %s' % str(e)
+                'message': 'Error posting review to PR - %s' % error
             }
 
         return {'result': 'completed', 'message': 'Checks ran successfully'}
