@@ -273,6 +273,7 @@ def github_api_request(settings, token, url, data=None):
     if data is not None:
         headers['Content-Type'] = 'application/json'
         data = json.dumps(data).encode('utf-8')
+        print('POST', data)
         method = 'POST'
     req = Request(
         url,
