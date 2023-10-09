@@ -7,7 +7,6 @@ import pathlib
 import subprocess
 import json
 from urllib.request import Request, urlopen
-import base64
 from urllib.error import HTTPError, URLError
 
 from .package_control.providers import RepositoryProvider
@@ -15,8 +14,9 @@ from .package_control.download_manager import downloader, close_all_connections
 from .package_control.downloaders.downloader_exception import DownloaderException
 from . import config
 from st_package_reviewer.check import file as file_checkers
-from st_package_reviewer.check.file.check_messages import CheckMessages
-from st_package_reviewer.check.file.check_resource_files import CheckHasSublimeSyntax
+# TODO(rchl): These depend on st_package_reviewer changes that are not in the main repo
+# from st_package_reviewer.check.file.check_messages import CheckMessages
+# from st_package_reviewer.check.file.check_resource_files import CheckHasSublimeSyntax
 
 
 def downloader_settings():
