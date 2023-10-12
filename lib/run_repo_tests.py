@@ -13,10 +13,9 @@ from .package_control.providers import RepositoryProvider
 from .package_control.download_manager import downloader, close_all_connections
 from .package_control.downloaders.downloader_exception import DownloaderException
 from . import config
-from st_package_reviewer.check import file as file_checkers
-# TODO(rchl): These depend on st_package_reviewer changes that are not in the main repo
-# from st_package_reviewer.check.file.check_messages import CheckMessages
-# from st_package_reviewer.check.file.check_resource_files import CheckHasSublimeSyntax
+from .st_package_reviewer.check import file as file_checkers
+from .st_package_reviewer.check.file.check_messages import CheckMessages
+from .st_package_reviewer.check.file.check_resource_files import CheckHasSublimeSyntax
 
 
 def downloader_settings():
@@ -172,13 +171,12 @@ def run_tests(spec):
             tmp_package_dir_pathlib = pathlib.Path(tmp_package_dir)
             for checker in file_checkers.get_checkers():
                 checker_obj = checker(tmp_package_dir_pathlib)
-                # TODO(rchl): These depend on st_package_reviewer changes that are not in the main repo
-                # if checker == CheckMessages:
-                #     for release_source in spec['releases']:
-                #         if isinstance(release_source.get('tags'), str):
-                #             checker_obj.add_prefix(release_source.get('tags'))
-                # elif checker == CheckHasSublimeSyntax:
-                #     checker_obj.set_selector(info['releases'][0]['sublime_text'])
+                if checker == CheckMessages:
+                    for release_source in spec['releases']:
+                        if isinstance(release_source.get('tags'), str):
+                            checker_obj.add_prefix(release_source.get('tags'))
+                elif checker == CheckHasSublimeSyntax:
+                    checker_obj.set_selector(info['releases'][0]['sublime_text'])
 
                 checker_obj.perform_check()
                 for failure in checker_obj.failures:

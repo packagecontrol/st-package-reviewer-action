@@ -1,5 +1,6 @@
 # review-bot-action
-GitHub Action for reviewing package control channel changes
+
+GitHub Action for reviewing package control channel changes.
 
 ## Example workflow
 
@@ -14,7 +15,8 @@ name: On PR
 # post review comments. "pull_request_target" runs workflow from the main branch instead,
 # allowing access token to work. That of course means that workflows changed or added in PRs
 # won't have any affect until merged.
-on: [pull_request_target]
+on:
+  - pull_request_target
 
 jobs:
   trigger-review:
@@ -33,8 +35,7 @@ jobs:
           python-version: 3.6
 
       - name: Install Python dependencies
-        # st_package_reviewer installed from repo as pypi release is not up to date currently
-        run: python3 -m pip install pyyaml git+https://github.com/packagecontrol/st_package_reviewer.git@d2b43530442f227751c925d259df8fb324eee18f
+        run: python3 -m pip install pyyaml
 
       # Run repository unittests
       - uses: sublimelsp/st-schema-reviewer-action@v1
