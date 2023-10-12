@@ -42,10 +42,10 @@ jobs:
         run: python3 -m pip install pyyaml
 
       # Run repository unittests
-      - uses: sublimelsp/st-schema-reviewer-action@v1
+      - uses: packagecontrol/st-schema-reviewer-action@v1
 
       # Run st package reviewer tests
-      - uses: sublimelsp/st-package-reviewer-action@v1
+      - uses: packagecontrol/st-package-reviewer-action@v1
         with:
           pr-url: ${{ github.event.pull_request.url }}
           base-sha: ${{ github.event.pull_request.base.sha }}
