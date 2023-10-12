@@ -2,11 +2,10 @@
 
 GitHub Action for reviewing package control channel changes.
 
-## Action releases
+## Usage
 
-It's recommended to create releases using semantically versioned tags – for example, v1.1.3 – and keeping major (v1) and minor (v1.1) tags current to the latest appropriate commit.
-
-## Example workflow
+> **Note**
+> Make sure that the repository that wants to use this action has the `Allow GitHub Actions to create and approve pull requests` option enabled in repository `Settings` -> `Actions`.
 
 Below is an example workflow for running this action.
 It can be placed at `.github/workflows/on-pr.yaml` (file can have any name).
@@ -52,3 +51,7 @@ jobs:
           current-sha: ${{ github.event.pull_request.head.sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+## Creating releases
+
+When releasing this code action, it's recommended to create releases using semantically versioned tags – for example, v1.1.3 – and keeping major (v1) and minor (v1.1) tags current to the latest appropriate commit.
