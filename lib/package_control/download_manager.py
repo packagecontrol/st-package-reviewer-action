@@ -27,7 +27,6 @@ from .downloaders.binary_not_found_error import BinaryNotFoundError
 from .downloaders.rate_limit_exception import RateLimitException
 from .downloaders.downloader_exception import DownloaderException
 from .downloaders.win_downloader_exception import WinDownloaderException
-from .downloaders.oscrypto_downloader_exception import OscryptoDownloaderException
 
 
 # A dict of domains - each points to a list of downloaders
@@ -220,9 +219,9 @@ class DownloadManager(object):
         downloader_precedence = self.settings.get(
             'downloader_precedence',
             {
-                "windows": ["wininet", "oscrypto"],
-                "osx": ["urllib", "oscrypto", "curl"],
-                "linux": ["urllib", "oscrypto", "curl", "wget"]
+                "windows": ["wininet", "urllib"],
+                "osx": ["urllib", "curl"],
+                "linux": ["urllib", "curl", "wget"]
             }
         )
         downloader_list = downloader_precedence.get(platform, [])
@@ -359,18 +358,6 @@ class DownloadManager(object):
                 (e.limit, e.domain)
             )
             raise
-
-        except (OscryptoDownloaderException) as e:
-            console_write(
-                u'''
-                Attempting to use Urllib downloader due to Oscrypto error: %s
-                ''',
-                str_cls(e)
-            )
-
-            self.downloader = UrlLibDownloader(self.settings)
-            # Try again with the new downloader!
-            return self.fetch(url, error_message, prefer_cached)
 
         except (WinDownloaderException) as e:
 
