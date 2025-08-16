@@ -6,8 +6,6 @@ import zipfile
 import pathlib
 import subprocess
 import json
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
 
 from .package_control.providers import RepositoryProvider
 from .package_control.download_manager import downloader, close_all_connections
@@ -251,41 +249,6 @@ def package_name(data):
         return os.path.basename(data['details'])
 
 
-def github_api_request(settings, token, url, data=None):
-    """
-    Performs a request to the github api using urllib
-
-    :param settings:
-        A dict containing the key 'user_agent'
-
-    :param url:
-        The URL to request
-
-    :param data:
-        A dict of data to send as a POST - otherwise GET is used
-
-    :return:
-        A urllib.request.Response object
-    """
-
-    headers = {
-        'Authorization': 'Bearer %s' % token,
-        'User-Agent': settings['user_agent'],
-    }
-    method = 'GET'
-    if data is not None:
-        headers['Content-Type'] = 'application/vnd.github.v3+json'
-        data = json.dumps(data).encode('utf-8')
-        method = 'POST'
-    req = Request(
-        url,
-        data=data,
-        headers=headers,
-        method=method
-    )
-    return urlopen(req)
-
-
 def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
     settings = downloader_settings()
 
@@ -493,58 +456,6 @@ def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
             event = 'APPROVE'
             review_status = 'SUCCESS'
 
-        comment = [
-            '### Automated testing result: %s' % review_status,
-            '',
-        ]
-        if len(pkg_links):
-            if len(pkg_links) == 1:
-                name = list(pkg_links.keys())[0]
-                comment.append('Repo link: [%s](%s)' % (name, pkg_links[name]))
-            else:
-                comment.append('Repo links:')
-                comment.append('')
-                for name in sorted(added_pkgs):
-                    if name in pkg_links:
-                        comment.append('  - [%s](%s)' % (name, pkg_links[name]))
-                comment.append('')
-        if errors or warnings:
-            comment.append('[Results help](https://github.com/packagecontrol/st_package_reviewer/wiki/Package-checks)')
-            comment.append('')
-        if output:
-            comment.append('```')
-            comment += output
-            comment.append('```')
-
-        comment_url = '%s/reviews' % pr_url
-
-        try:
-            res = github_api_request(settings, token, comment_url, {'body': '\n'.join(comment), 'event': 'REQUEST_CHANGES'})
-            if res.getcode() != 200:
-                return {
-                    '__status_code__': 500,
-                    'result': 'error',
-                    'message': 'Error posting review to PR - %d' % res.getcode()
-                }
-        except URLError as e:
-            # readlines seems undocumented for URLError but appears to be the
-            # only way to get the response data
-            try:
-                error = '%s (response: %s)' % (e, e.readlines())
-            except Exception as e:
-                error = str(e)
-            return {
-                '__status_code__': 500,
-                'result': 'error',
-                'message': 'Error posting review to PR - %s' % error
-            }
-        except HTTPError as e:
-            error = '%s (response: %s)' % (e, e.readlines())
-            return {
-                '__status_code__': 500,
-                'result': 'error',
-                'message': 'Error posting review to PR - %s' % error
-            }
 
         return {'result': 'completed', 'message': 'Checks ran successfully'}
 
