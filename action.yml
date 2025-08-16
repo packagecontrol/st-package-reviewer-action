@@ -11,9 +11,6 @@ inputs:
   current-sha:
     description: The SHA of the current commit to diff against
     required: true
-  token:
-    description: The temporary GitHub token used to post review results as comments
-    required: true
 
 runs:
   using: 'composite'
@@ -25,4 +22,3 @@ runs:
         --pr-url ${{ inputs.pr-url }} \
         --base-sha ${{ inputs.base-sha }} \
         --current-sha ${{ inputs.current-sha }} \
-        --token ${{ inputs.token }}
