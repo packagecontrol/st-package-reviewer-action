@@ -10,15 +10,17 @@ import json
 from .package_control.providers import RepositoryProvider
 from .package_control.download_manager import downloader, close_all_connections
 from .package_control.downloaders.downloader_exception import DownloaderException
-from . import config
 from .st_package_reviewer.check import file as file_checkers
 from .st_package_reviewer.check.file.check_messages import CheckMessages
 
 
-def downloader_settings():
-    settings = config.read('crawler')
-    settings['debug'] = False
-    return settings
+DOWNLOADER_SETTINGS = {
+    'cache_length': 600,
+    'debug': True,
+    'timeout': 10,
+    'user_agent': 'Package Control Default Channel Server',
+    'install_prereleases': True
+}
 
 
 def build_result(errors, warnings):
@@ -88,7 +90,6 @@ def run_tests(spec):
             return build_result(errors, warnings)
 
         url = info['releases'][0]['url']
-        settings = downloader_settings()
         name = info['name']
 
         if not isinstance(url, str) or not url.startswith('https://'):
@@ -101,7 +102,7 @@ def run_tests(spec):
         tmp_package_path = os.path.join(tmpdir, '%s.sublime-package' % name)
         tmp_package_dir = os.path.join(tmpdir, name)
         os.mkdir(tmp_package_dir)
-        with open(tmp_package_path, 'wb') as package_file, downloader(url, settings) as manager:
+        with open(tmp_package_path, 'wb') as package_file, downloader(url, DOWNLOADER_SETTINGS) as manager:
             try:
                 package_file.write(manager.fetch(url, 'fetching package'))
             except DownloaderException as e:
@@ -199,13 +200,11 @@ def fetch_package_metadata(spec):
         is a string error message.
     """
 
-    settings = downloader_settings()
-
     def clean_message(exception):
         error = exception.args[0]
         return error.replace(' in the repository https://example.com', '')
 
-    provider = RepositoryProvider('https://example.com', settings)
+    provider = RepositoryProvider('https://example.com', DOWNLOADER_SETTINGS)
     provider.schema_version = '3.0.0'
     provider.schema_major_version = 3
     provider.repo_info = {'schema_version': '3.0.0', 'packages': [spec], 'dependencies': []}
@@ -250,8 +249,6 @@ def package_name(data):
 
 
 def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
-    settings = downloader_settings()
-
     tmpdir = None
     try:
         tmpdir = tempfile.mkdtemp()
@@ -357,7 +354,7 @@ def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
                     output.append('  - ERROR: External repositories added to the default channel must be served over HTTPS')
                     # Continue with testing regardless
 
-                with downloader(repo, settings) as manager:
+                with downloader(repo, DOWNLOADER_SETTINGS) as manager:
                     try:
                         raw_data = manager.fetch(repo, 'fetching repository')
                     except DownloaderException as e:
