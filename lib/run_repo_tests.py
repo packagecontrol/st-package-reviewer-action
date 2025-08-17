@@ -248,7 +248,7 @@ def package_name(data):
         return os.path.basename(data['details'])
 
 
-def test_pull_request(pr_url: str, old_rev: str, current_rev: str, token: str):
+def test_pull_request(old_rev: str, current_rev: str):
     tmpdir = None
     try:
         tmpdir = tempfile.mkdtemp()
