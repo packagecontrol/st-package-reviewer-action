@@ -58,7 +58,6 @@ jobs:
       # Run st package reviewer tests
       - uses: packagecontrol/st-package-reviewer-action@v1
         with:
-          pr-url: ${{ github.event.pull_request.url }}
           base-sha: ${{ github.event.pull_request.base.sha }}
           current-sha: ${{ github.event.pull_request.head.sha }}
 ```
