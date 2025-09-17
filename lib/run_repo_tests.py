@@ -16,7 +16,7 @@ from .st_package_reviewer.check.file.check_messages import CheckMessages
 
 DOWNLOADER_SETTINGS = {
     'cache_length': 600,
-    'debug': True,
+    'debug': False,
     'timeout': 10,
     'user_agent': 'Package Control Default Channel Server',
     'install_prereleases': True
