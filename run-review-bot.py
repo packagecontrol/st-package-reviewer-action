@@ -1,5 +1,6 @@
 from lib import test_pull_request
 import argparse
+import sys
 
 
 def main():
@@ -9,7 +10,10 @@ def main():
     args = parser.parse_args()
     res = test_pull_request(args.base_sha, args.current_sha)
 
-    print(res)
+    if res[0] == 1:
+        sys.exit(res[1])
+    else:
+        print(res[1])
 
 
 if __name__ == '__main__':

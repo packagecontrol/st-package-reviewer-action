@@ -442,19 +442,10 @@ def test_pull_request(old_rev: str, current_rev: str):
                         for detail in report['details']:
                             output.append('    - %s' % detail)
 
-        review_status = None
+        exit_code = 0
         if errors:
-            event = 'REQUEST_CHANGES'
-            review_status = 'ERROR'
-        elif warnings:
-            event = 'COMMENT'
-            review_status = 'WARNING'
-        else:
-            event = 'APPROVE'
-            review_status = 'SUCCESS'
-
-
-        return {'result': 'completed', 'message': 'Checks ran successfully'}
+            exit_code = 1
+        return (exit_code, '\n'.join(output))
 
     finally:
         if tmpdir and os.path.exists(tmpdir):
