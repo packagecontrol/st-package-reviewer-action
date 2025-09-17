@@ -84,7 +84,7 @@ def run_tests(spec):
                 if set(platforms) == {'windows', 'osx', 'linux'} or platforms == ['*']:
                     errors.append(format_report('The "platforms" key may be omitted instead of specifying all platform'))
         if info['readme'] is None:
-            warnings.append(format_report('Creating a readme for your package will help users understand what it does and how to use it'))
+            errors.append(format_report('Creating a readme for your package will help users understand what it does and how to use it'))
 
         if not info['releases']:
             return build_result(errors, warnings)
