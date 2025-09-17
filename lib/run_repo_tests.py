@@ -82,7 +82,7 @@ def run_tests(spec):
                     errors.append(format_report('Branch-based releases are not supported for new packages; please use "tags": true'))
                 platforms = release_source.get('platforms', [])
                 if set(platforms) == {'windows', 'osx', 'linux'} or platforms == ['*']:
-                    warnings.append(format_report('The "platforms" key may be omitted instead of specifying all platform'))
+                    errors.append(format_report('The "platforms" key may be omitted instead of specifying all platform'))
         if info['readme'] is None:
             warnings.append(format_report('Creating a readme for your package will help users understand what it does and how to use it'))
 
