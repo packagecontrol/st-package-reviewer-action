@@ -58,7 +58,10 @@ class CheckKeymaps(FileChecker):
 
                     # import pdb; pdb.set_trace()
                 for conflict in conflicts:
-                    if not conflict.get('context'):
+                    if conflict.get('context'):
+                        self.warn("The binding {} is also defined in default bindings "
+                                  "but is masked with a 'context'".format(conflict['keys']))
+                    else:
                         self.fail("The binding {} unconditionally overrides a default binding"
                                   .format(conflict['keys']))
 

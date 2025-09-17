@@ -2,10 +2,7 @@
 
 So this is the action seemingly exclusively used by the LSP project and a handful individuals.
 
-It has an old copy of the st_package_reviewer, which has newer versions here:
-https://github.com/packagecontrol/st_package_reviewer
-
-The package_control is seemingly a severely outdated copy of the PC client package maintained at https://github.com/wbond/package_control. 
+The package_control is seemingly a severely outdated copy (from 2021) of the PC client package maintained at https://github.com/wbond/package_control. It's impossible to upgrade because it was never intended to be used in this way (ie. outside of ST) and recent versions deeply break the interface.
 
 That's about package reviews, ie. static analysis. The other aspect is the schema, which is checked in an action called `packagecontrol/st-schema-reviewer-action`.
 

@@ -1,5 +1,4 @@
 import json
-import re
 
 from ...lib.semver import SemVer
 
@@ -8,17 +7,7 @@ from . import FileChecker
 
 class CheckMessages(FileChecker):
 
-    prefixes = None
-
-    def add_prefix(self, prefix):
-        if self.prefixes is None:
-            self.prefixes = {'v'}
-        self.prefixes.add(prefix)
-
     def check(self):
-        if self.prefixes is None:
-            self.prefixes = {'v'}
-
         msg_path = self.sub_path("messages.json")
         folder_exists = self.sub_path("messages").is_dir()
         file_exists = msg_path.is_file()
@@ -38,11 +27,10 @@ class CheckMessages(FileChecker):
                     self.fail("unable to load `messages.json`", exception=e)
                     return
 
-            prefix_regex = '^(' + '|'.join(list(self.prefixes)) + ')'
             for key, rel_path in data.items():
                 if key == "install":
                     pass
-                elif SemVer.valid(re.sub(prefix_regex, '', key)):
+                elif SemVer.valid(key):
                     pass
                 else:
                     self.fail("Key {!r} is not 'install' or a valid semantic version"
