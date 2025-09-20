@@ -222,7 +222,7 @@ class KeyMapping:
                     "browser_search", "browser_favorites", "browser_home",
                     "clear", "sysreq",
                     # new keys used in the default linux keymaps
-                    "open", "close", "save", "undo", "redo", "cut", "copy", "paste",
+                    "open", "close", "save", "undo", "redo", "cut", "copy", "paste", "find",
                     # these have single-character equivalents
                     # TODO resolve these aliases
                     "plus", "minus", "equals", "forward_slash", "backquote",
