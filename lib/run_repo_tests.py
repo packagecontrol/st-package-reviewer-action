@@ -23,26 +23,6 @@ DOWNLOADER_SETTINGS = {
 }
 
 
-def build_result(errors, warnings):
-    if errors:
-        result = 'errors'
-    elif warnings:
-        result = 'warnings'
-    else:
-        result = 'success'
-    return {'result': result, 'details': {'errors': errors, 'warnings': warnings}}
-
-
-def format_report(report):
-    if isinstance(report, str):
-        return {'message': report, 'details': []}
-    output = {'message': report.message, 'details': []}
-    for elem in report.details:
-        output['details'].append(elem)
-    # We skip the exception backtrace so we don't expose env info
-    return output
-
-
 def run_tests(spec):
     """
     Runs repo tests for a repository
@@ -56,48 +36,55 @@ def run_tests(spec):
 
     res, info = fetch_package_metadata(spec)
     if not res:
-        return build_result([format_report(info)], [])
+        print('::error title=FAIL ::{}'.format(info))
+        return False
 
     name = info.get('name')
     if not isinstance(name, str) or '/' in name or '\\' in name:
-        return build_result([format_report('Invalid package name')], [])
+        print('::error title=NAME ::Invalid package name')
+        return False
 
+    success = True
     tmpdir = None
     try:
-
-        errors = []
-        warnings = []
-
         if 'sublime' in info['name'].lower():
-            errors.append('Package name contains the word "sublime"')
+            print('::error title=NAME ::Package name contains the word Sublime')
+            success = False
 
         if not info['releases']:
+            success = False
             if spec['releases']:
-                errors.append(format_report('No releases found; check to ensure you have created a valid semver tag'))
+                print('::error title=RELEASE ::No releases found, ensure valid semver tags')
             else:
-                errors.append(format_report('No releases specified'))
+                print('::error title=RELEASE ::No releases found')
         else:
             for release_source in spec['releases']:
                 if 'branch' in release_source:
-                    errors.append(format_report('Branch-based releases are not supported for new packages; please use "tags": true'))
+                    print('::error title=RELEASE ::Branch-based releases are deprecated, use tags instead')
+                    success = False
                 platforms = release_source.get('platforms', [])
                 if set(platforms) == {'windows', 'osx', 'linux'} or platforms == ['*']:
-                    errors.append(format_report('The "platforms" key may be omitted instead of specifying all platform'))
+                    print('::error title=RELEASE ::All platforms are supported, omit the key')
+                    success = False
+
         if info['readme'] is None:
-            errors.append(format_report('Creating a readme for your package will help users understand what it does and how to use it'))
+            print('::error title=README ::No README found')
+            success = False
 
         if not info['releases']:
-            return build_result(errors, warnings)
+            return False
 
         url = info['releases'][0]['url']
         name = info['name']
 
         if not isinstance(url, str) or not url.startswith('https://'):
-            return build_result([format_report('Primary release URL does not begin with https://')], [])
+            print('::error title=HTTP ::Packages must be served over HTTPS')
+            return False
 
         tmpdir = tempfile.mkdtemp()
         if not tmpdir:
-            return build_result([format_report('Could not create temp dir')], [])
+            print('::error title=FAIL ::Could not create temp dir')
+            return False
 
         tmp_package_path = os.path.join(tmpdir, '%s.sublime-package' % name)
         tmp_package_dir = os.path.join(tmpdir, name)
@@ -106,8 +93,8 @@ def run_tests(spec):
             try:
                 package_file.write(manager.fetch(url, 'fetching package'))
             except DownloaderException as e:
-                errors.append(format_report(str(e)))
-                return build_result(errors, warnings)
+                print('::error title=FAIL ::{}'.format(str(e)))
+                return False
 
         with zipfile.ZipFile(tmp_package_path, 'r') as package_zip:
 
@@ -125,8 +112,8 @@ def run_tests(spec):
                     root_level_paths.append(path)
                 # Make sure there are no paths that look like security vulnerabilities
                 if path[0] == '/' or '../' in path:
-                    errors.append(format_report('The path "%s" appears to be attempting to access other parts of the filesystem' % path))
-                    return build_result(errors, warnings)
+                    print('::error title=FAIL ::{} appears to be attempting to access other parts of the filesystem'.format(path))  # noqa: E501
+                    return False
 
             if last_path and len(root_level_paths) == 0:
                 root_level_paths.append(last_path[0:last_path.find('/') + 1])
@@ -153,8 +140,8 @@ def run_tests(spec):
                 dest = os.path.abspath(dest)
                 # Make sure there are no paths that look like security vulnerabilities
                 if not dest.startswith(tmp_package_dir):
-                    errors.append(format_report('The path "%s" appears to be attempting to access other parts of the filesystem' % path))
-                    return build_result(errors, warnings)
+                    print('::error title=FAIL ::{} appears to be attempting to access other parts of the filesystem'.format(path))  # noqa: E501
+                    return False
 
                 if path.endswith('/'):
                     if not os.path.exists(dest):
@@ -176,11 +163,12 @@ def run_tests(spec):
 
                 checker_obj.perform_check()
                 for failure in checker_obj.failures:
-                    errors.append(format_report(failure))
+                    print('::error title=CHECK ::{}'.format(', '.join(failure.details)))
+                    success = False
                 for warning in checker_obj.warnings:
-                    warnings.append(format_report(warning))
+                    print('::warning title=CHECK ::{}'.format(', '.join(warning.details)))
 
-        return build_result(errors, warnings)
+        return success
 
     finally:
         if tmpdir and os.path.exists(tmpdir):
@@ -326,7 +314,7 @@ def test_pull_request(old_rev: str, current_rev: str):
                     for index in deleted_indexes:
                         removed_pkgs.add(package_name(old_json['packages'][index]))
 
-        errors = False
+        success = True
 
         if removed_repositories:
             print('::notice title=REPO_ADDED ::{}'.format(', '.join(removed_repositories)))
@@ -340,28 +328,28 @@ def test_pull_request(old_rev: str, current_rev: str):
                     continue
 
                 if repo.startswith('http://'):
-                    errors = True
-                    print('::warning title=HTTP ::Repositories must be served over HTTPS')
-                    # Continue with testing regardless
+                    success = False
+                    print('::error title=HTTP ::Repositories must be served over HTTPS')
+                    continue
 
                 with downloader(repo, DOWNLOADER_SETTINGS) as manager:
                     try:
                         raw_data = manager.fetch(repo, 'fetching repository')
                     except DownloaderException as e:
-                        errors = True
+                        success = False
                         print('::error title=FAIL ::%s' % str(e))
                         continue
 
                 try:
                     raw_data = raw_data.decode('utf-8')
                 except UnicodeDecodeError:
-                    errors = True
+                    success = False
                     print('::error title=JSON ::Unable to decode JSON as UTF-8')
                     continue
                 try:
                     repo_json = json.loads(raw_data)
                 except ValueError:
-                    errors = True
+                    success = False
                     print('::error title=JSON ::Unable to parse JSON')
                     continue
 
@@ -369,15 +357,15 @@ def test_pull_request(old_rev: str, current_rev: str):
                 for key in ['schema_version', 'packages']:
                     if key not in repo_json:
                         missing_key = True
-                        print('::error title=SCHEMA ::Top-level key "%s" is missing' % key)
+                        print('::error title=SCHEMA ::Top-level key {} is missing'.format(key))
                         continue
 
                 if missing_key:
-                    errors = True
+                    success = False
                     continue
 
                 if repo_json['schema_version'] != '3.0.0':
-                    errors = True
+                    success = False
                     print('::error title=SCHEMA ::schema_version must be 3.0.0')
                     continue
 
@@ -398,23 +386,16 @@ def test_pull_request(old_rev: str, current_rev: str):
         if added_pkgs:
             for name in sorted(added_pkgs):
                 data = added_pkg_data[name]
-                test_results = run_tests(data)
-                if test_results['result'] == 'success':
+                passes = run_tests(data)
+                if passes:
                     print('::notice title=PASS ::{}'.format(name))
-                    continue
-                if test_results['details']['errors']:
-                    errors = True
-                    for report in test_results['details']['errors']:
-                        for detail in report['details']:
-                            print('::error title={} ::{}'.format(report['message'], detail))
-                if test_results['details']['warnings']:
-                    for report in test_results['details']['warnings']:
-                        for detail in report['details']:
-                            print('::warning title={} ::{}'.format(report['message'], detail))
+                else:
+                    success = False
+                continue
 
-        if errors:
-            return (1, 'Errors occurred')
-        return (0, 'All good')
+        if success:
+            return (0, 'All good')
+        return (1, 'Errors occurred')
 
     finally:
         if tmpdir and os.path.exists(tmpdir):
