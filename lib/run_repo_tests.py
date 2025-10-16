@@ -326,32 +326,22 @@ def test_pull_request(old_rev: str, current_rev: str):
                     for index in deleted_indexes:
                         removed_pkgs.add(package_name(old_json['packages'][index]))
 
-        output = []
         errors = False
-        warnings = False
 
         if removed_repositories:
-            output.append('Repositories removed:')
-            for url in sorted(removed_repositories):
-                output.append('  - %s' % url)
+            print('::notice title=REPO_ADDED ::{}'.format(', '.join(removed_repositories)))
 
         if added_repositories:
-            if output:
-                output.append('')
-            output.append('Repositories added:')
-            for url in sorted(added_repositories):
-                output.append('  - %s' % url)
+            print('::notice title=REPO_REMOVED ::{}'.format(', '.join(added_repositories)))
 
         if added_repositories:
             for repo in added_repositories:
                 if not repo.startswith('http://') and not repo.startswith('https://'):
                     continue
 
-                output.append('')
-                output.append('Processing repository "%s"' % repo)
                 if repo.startswith('http://'):
                     errors = True
-                    output.append('  - ERROR: External repositories added to the default channel must be served over HTTPS')
+                    print('::warning title=HTTP ::Repositories must be served over HTTPS')
                     # Continue with testing regardless
 
                 with downloader(repo, DOWNLOADER_SETTINGS) as manager:
@@ -359,27 +349,27 @@ def test_pull_request(old_rev: str, current_rev: str):
                         raw_data = manager.fetch(repo, 'fetching repository')
                     except DownloaderException as e:
                         errors = True
-                        output.append('  - ERROR: %s' % str(e))
+                        print('::error title=FAIL ::%s' % str(e))
                         continue
 
                 try:
                     raw_data = raw_data.decode('utf-8')
                 except UnicodeDecodeError:
                     errors = True
-                    output.append('  - ERROR: Unable to decode JSON as UTF-8')
+                    print('::error title=JSON ::Unable to decode JSON as UTF-8')
                     continue
                 try:
                     repo_json = json.loads(raw_data)
                 except ValueError:
                     errors = True
-                    output.append('  - ERROR: Unable to parse JSON')
+                    print('::error title=JSON ::Unable to parse JSON')
                     continue
 
                 missing_key = False
                 for key in ['schema_version', 'packages']:
                     if key not in repo_json:
                         missing_key = True
-                        output.append('  - ERROR: Top-level key "%s" is missing' % key)
+                        print('::error title=SCHEMA ::Top-level key "%s" is missing' % key)
                         continue
 
                 if missing_key:
@@ -388,64 +378,43 @@ def test_pull_request(old_rev: str, current_rev: str):
 
                 if repo_json['schema_version'] != '3.0.0':
                     errors = True
-                    output.append('  - ERROR: "schema_version" must be "3.0.0"')
+                    print('::error title=SCHEMA ::schema_version must be 3.0.0')
                     continue
 
-                num_pkgs = 0
                 for pkg_info in repo_json['packages']:
                     pkg_name = package_name(pkg_info)
                     added_pkgs.add(pkg_name)
                     added_pkg_data[pkg_name] = pkg_info
-                    num_pkgs += 1
-                output.append('  - Found %d package%s' % (num_pkgs, 's' if num_pkgs != 1 else ''))
 
         if removed_pkgs:
-            if output:
-                output.append('')
-            output.append('Packages removed:')
-            for name in sorted(removed_pkgs):
-                output.append('  - %s' % name)
+            print('::notice title=REMOVED ::{}'.format(', '.join(removed_pkgs)))
 
         if modified_pkgs:
-            if output:
-                output.append('')
-            output.append('Packages modified:')
-            for name in sorted(modified_pkgs):
-                output.append('  - %s' % name)
+            print('::notice title=MODIFIED ::{}'.format(', '.join(modified_pkgs)))
 
         if added_pkgs:
-            if output:
-                output.append('')
-            output.append('Packages added:')
-            for name in sorted(added_pkgs):
-                output.append('  - %s' % name)
+            print('::notice title=ADDED ::{}'.format(', '.join(added_pkgs)))
 
         if added_pkgs:
             for name in sorted(added_pkgs):
-                output.append('')
-                output.append('Processing package "%s"' % name)
                 data = added_pkg_data[name]
                 test_results = run_tests(data)
                 if test_results['result'] == 'success':
-                    output.append('  - All checks passed')
+                    print('::notice title=PASS ::{}'.format(name))
                     continue
                 if test_results['details']['errors']:
                     errors = True
                     for report in test_results['details']['errors']:
-                        output.append('  - ERROR: %s' % report['message'])
                         for detail in report['details']:
-                            output.append('    - %s' % detail)
+                            print('::error title={} ::{}'.format(report['message'], detail))
                 if test_results['details']['warnings']:
-                    warnings = True
                     for report in test_results['details']['warnings']:
-                        output.append('  - WARNING: %s' % report['message'])
                         for detail in report['details']:
-                            output.append('    - %s' % detail)
+                            print('::warning title={} ::{}'.format(report['message'], detail))
 
-        exit_code = 0
         if errors:
-            exit_code = 1
-        return (exit_code, '\n'.join(output))
+            return (1, 'Errors occurred')
+        return (0, 'All good')
 
     finally:
         if tmpdir and os.path.exists(tmpdir):
