@@ -23,6 +23,16 @@ DOWNLOADER_SETTINGS = {
 }
 
 
+def format_report(report):
+    if isinstance(report, str):
+        return report
+
+    if report.details:
+        return '{}: {}'.format(report.message, ', '.join(report.details))
+
+    return report.message
+
+
 def run_tests(spec):
     """
     Runs repo tests for a repository
@@ -163,10 +173,10 @@ def run_tests(spec):
 
                 checker_obj.perform_check()
                 for failure in checker_obj.failures:
-                    print('::error title=CHECK ::{}'.format(', '.join(failure.details)))
+                    print('::error title=CHECK ::{}'.format(format_report(failure)))
                     success = False
                 for warning in checker_obj.warnings:
-                    print('::warning title=CHECK ::{}'.format(', '.join(warning.details)))
+                    print('::warning title=CHECK ::{}'.format(format_report(warning)))
 
         return success
 
