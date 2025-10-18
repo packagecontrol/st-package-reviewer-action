@@ -398,7 +398,7 @@ def test_pull_request(old_rev: str, current_rev: str):
                 data = added_pkg_data[name]
                 passes = run_tests(data)
                 if passes:
-                    print('::notice title=PASS ::{}'.format(name))
+                    print('::notice title=PASS ::OK {}'.format(name))
                 else:
                     success = False
                 continue
