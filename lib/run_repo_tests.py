@@ -327,10 +327,10 @@ def test_pull_request(old_rev: str, current_rev: str):
         success = True
 
         if removed_repositories:
-            print('::notice title=REPO_REMOVED ::Removed: {}'.format(', '.join(removed_repositories)))
+            print('::notice title=REPO_REMOVED ::Removed {}'.format(', '.join(removed_repositories)))
 
         if added_repositories:
-            print('::notice title=REPO_ADDED ::Added: {}'.format(', '.join(added_repositories)))
+            print('::notice title=REPO_ADDED ::Added {}'.format(', '.join(added_repositories)))
 
         if added_repositories:
             for repo in added_repositories:
@@ -385,13 +385,13 @@ def test_pull_request(old_rev: str, current_rev: str):
                     added_pkg_data[pkg_name] = pkg_info
 
         if removed_pkgs:
-            print('::notice title=REMOVED ::{}'.format(', '.join(removed_pkgs)))
+            print('::notice title=REMOVED ::Removed {}'.format(', '.join(removed_pkgs)))
 
         if modified_pkgs:
-            print('::notice title=MODIFIED ::{}'.format(', '.join(modified_pkgs)))
+            print('::notice title=MODIFIED ::Modified {}'.format(', '.join(modified_pkgs)))
 
         if added_pkgs:
-            print('::notice title=ADDED ::{}'.format(', '.join(added_pkgs)))
+            print('::notice title=ADDED ::Added {}'.format(', '.join(added_pkgs)))
 
         if added_pkgs:
             for name in sorted(added_pkgs):
