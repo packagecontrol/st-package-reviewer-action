@@ -1,6 +1,12 @@
 # review-bot-action
 
-GitHub Action for reviewing package control channel changes.
+GitHub Action for reviewing package control channel changes. 
+
+This uses:
+- a copy of https://github.com/packagecontrol/st_package_reviewer for its tests.
+- a (very outdated) copy of the [Package Control package](https://github.com/sublimehq/package_control) to download the packages to be tested.
+
+As such, reliability is limited. Development of a new architecture is under way.
 
 ## Usage
 
